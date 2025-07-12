@@ -4,6 +4,50 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GearShare Latvia - Аренда снаряжения</title>
+    <!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+<script>
+  // Your web app's Firebase configuration
+  const firebaseConfig = {
+  apiKey: "AIzaSyBKRk0B0ZVa350ETlNqHvgLq6ZS2tcXrIA",
+  authDomain: "gearsharelatvia.firebaseapp.com",
+  projectId: "gearsharelatvia",
+  storageBucket: "gearsharelatvia.firebasestorage.app",
+  messagingSenderId: "175846319326",
+  appId: "1:175846319326:web:0341f2b9d7b38c00ab4e4f"
+};
+  // Initialize Firebase
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+  
+  function searchEquipment() {
+    const type = document.querySelector('input[placeholder="Тип (напр., палатка)"]').value;
+    const city = document.querySelector('input[placeholder="Город (напр., Рига)"]').value;
+    db.collection("equipment")
+      .where("type", "==", type)
+      .where("city", "==", city)
+      .get()
+      .then((querySnapshot) => {
+        let results = "Найдено:\n";
+        querySnapshot.forEach((doc) => {
+          const data = doc.data();
+          results += `${data.type}, ${data.city}, €${data.price}\n`;
+        });
+        if (results === "Найдено:\n") {
+          alert("Ничего не найдено!");
+        } else {
+          alert(results);
+        }
+      })
+      .catch((error) => {
+        console.error("Ошибка поиска: ", error);
+        alert("Ошибка при поиске. Проверь консоль браузера.");
+      });
+  }
+
+</script>
+
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -50,8 +94,9 @@
         }
     </style>
 </head>
+
 <body>
-    <header>
+       <header>
         <h1>GearShare Latvia - Аренда снаряжения</h1>
         <p>Найдите снаряжение для активного отдыха в Латвии!</p>
     </header>
@@ -60,7 +105,7 @@
         <input type="text" placeholder="Тип (напр., палатка)" required>
         <input type="text" placeholder="Город (напр., Рига)" required>
         <input type="date" required>
-        <button onclick="alert('Поиск скоро будет доступен!')">Найти</button>
+        <button onclick="searchEquipment()">Найти</button>
     </div>
     <div class="container">
         <section id="portfolio">
