@@ -21,11 +21,40 @@
   firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
 
+  // Функция для загрузки списка снаряжения
+  function loadEquipment() {
+    const equipmentItems = document.getElementById('equipment-items');
+    equipmentItems.innerHTML = ''; // Очищаем список
+    db.collection("equipment").get()
+      .then((querySnapshot) => {
+        querySnapshot.forEach((doc) => {
+          const data = doc.data();
+          const availableDates = data.availableDates || [];
+          // Показываем только если есть даты доступности
+          if (availableDates.length > 0) {
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'equipment-item';
+            itemDiv.innerHTML = `
+              <h3>${data.type}</h3>
+              <p>Город: ${data.city}</p>
+              <p>Цена: €${data.price}</p>
+              <p>Доступно: ${availableDates.join(', ')}</p>
+            `;
+            equipmentItems.appendChild(itemDiv);
+          }
+        });
+      })
+      .catch((error) => {
+        console.error("Ошибка загрузки списка: ", error);
+      });
+  }
+
+  // Функция поиска (оставляем как есть)
   function searchEquipment() {
     const type = document.querySelector('input[placeholder="Тип (напр., палатка)"]').value;
     const city = document.querySelector('input[placeholder="Город (напр., Рига)"]').value;
     const dateInput = document.querySelector('input[type="date"]').value;
-    const searchDate = dateInput ? dateInput.split('-').reverse().join('/') : null; // DD/MM/YYYY
+    const searchDate = dateInput ? dateInput.split('-').reverse().join('/') : null;
 
     db.collection("equipment")
       .where("type", "==", type)
@@ -36,7 +65,6 @@
         querySnapshot.forEach((doc) => {
           const data = doc.data();
           const availableDates = data.availableDates || [];
-          // Проверяем доступность: если дата выбрана, проверяем её, иначе показываем все с availableDates
           const isAvailable = (!searchDate && availableDates.length > 0) || (searchDate && availableDates.includes(searchDate));
           if (isAvailable) {
             results += `${data.type}, ${data.city}, €${data.price}\n`;
@@ -53,7 +81,10 @@
         alert("Ошибка при поиске. Проверь консоль браузера.");
       });
   }
- </script>
+
+  // Загружаем список при загрузке страницы
+  window.onload = loadEquipment;
+</script>
 
     <style>
         body {
@@ -103,6 +134,24 @@
             width: 100%;
             font-size: 1.1em;
         }
+        #equipment-list {
+            max-width: 900px;
+            margin: 2em auto;
+            padding: 0 1em;
+        }
+        #equipment-items {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1em;
+        }
+        .equipment-item {
+            background-color: white;
+            padding: 1em;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            width: 200px;
+            text-align: center;
+        }
     </style>
 </head>
 
@@ -111,6 +160,12 @@
         <h1>GearShare Latvia - Аренда снаряжения</h1>
         <p>Найдите снаряжение для активного отдыха в Латвии!</p>
     </header>
+
+    <div id="equipment-list" class="container">
+        <h2>Доступное снаряжение</h2>
+        <div id="equipment-items"></div>
+    </div>
+
     <div class="search-form">
         <h2>Найти снаряжение</h2>
         <input type="text" placeholder="Тип (напр., палатка)" required>
