@@ -10,20 +10,23 @@
 <script>
   // Your web app's Firebase configuration
   const firebaseConfig = {
-  apiKey: "AIzaSyBKRk0B0ZVa350ETlNqHvgLq6ZS2tcXrIA",
-  authDomain: "gearsharelatvia.firebaseapp.com",
-  projectId: "gearsharelatvia",
-  storageBucket: "gearsharelatvia.firebasestorage.app",
-  messagingSenderId: "175846319326",
-  appId: "1:175846319326:web:0341f2b9d7b38c00ab4e4f"
-};
+    apiKey: "AIzaSyBKRk0B0ZVa350ETlNqHvgLq6ZS2tcXrIA",
+    authDomain: "gearsharelatvia.firebaseapp.com",
+    projectId: "gearsharelatvia",
+    storageBucket: "gearsharelatvia.firebasestorage.app",
+    messagingSenderId: "175846319326",
+    appId: "1:175846319326:web:0341f2b9d7b38c00ab4e4f"
+  };
   // Initialize Firebase
   firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
-  
+
   function searchEquipment() {
     const type = document.querySelector('input[placeholder="Тип (напр., палатка)"]').value;
     const city = document.querySelector('input[placeholder="Город (напр., Рига)"]').value;
+    const dateInput = document.querySelector('input[type="date"]').value;
+    const searchDate = dateInput ? dateInput.split('-').reverse().join('/') : null; // DD/MM/YYYY
+
     db.collection("equipment")
       .where("type", "==", type)
       .where("city", "==", city)
@@ -32,10 +35,15 @@
         let results = "Найдено:\n";
         querySnapshot.forEach((doc) => {
           const data = doc.data();
-          results += `${data.type}, ${data.city}, €${data.price}\n`;
+          const availableDates = data.availableDates || [];
+          // Проверяем доступность: если дата выбрана, проверяем её, иначе показываем все с availableDates
+          const isAvailable = (!searchDate && availableDates.length > 0) || (searchDate && availableDates.includes(searchDate));
+          if (isAvailable) {
+            results += `${data.type}, ${data.city}, €${data.price}\n`;
+          }
         });
         if (results === "Найдено:\n") {
-          alert("Ничего не найдено!");
+          alert("Ничего не найдено или снаряжение недоступно на эту дату!");
         } else {
           alert(results);
         }
@@ -45,8 +53,7 @@
         alert("Ошибка при поиске. Проверь консоль браузера.");
       });
   }
-
-</script>
+ </script>
 
     <style>
         body {
@@ -56,15 +63,18 @@
             background-color: #f4f4f4;
         }
         header {
-            background-color: #2c3e50;
-            color: white;
-            text-align: center;
-            padding: 2em;
+           background-color: #34495e; /* Более тёмный синий */
+           color: white;
+           text-align: center;
+           padding: 2em;
         }
         .search-form {
-            margin: 2em auto;
-            max-width: 600px;
-            text-align: center;
+           margin: 2em auto;
+           max-width: 600px;
+           text-align: center;
+           border: 1px solid #ddd;
+           padding: 1em;
+           border-radius: 5px;
         }
         .search-form input, .search-form button {
             padding: 0.5em;
@@ -84,13 +94,14 @@
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
         footer {
-            background-color: #2c3e50;
+            background-color: #34495e;
             color: white;
             text-align: center;
             padding: 1em;
             position: fixed;
             bottom: 0;
             width: 100%;
+            font-size: 1.1em;
         }
     </style>
 </head>
